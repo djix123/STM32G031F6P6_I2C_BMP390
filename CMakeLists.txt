@@ -54,7 +54,9 @@ set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/STM32G031F6PX_FLASH.ld)
 
 add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map,--no-warn-rwx-segments)
 add_link_options(-mcpu=cortex-m0plus -mthumb)
-add_link_options(-specs=nano.specs -T ${LINKER_SCRIPT} -lc -lm -lnosys)
+add_link_options(-specs=nano.specs -specs=nosys.specs -lc -lm)
+add_link_options(-T ${LINKER_SCRIPT})
+#add_link_options(-u _printf_float)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
 
