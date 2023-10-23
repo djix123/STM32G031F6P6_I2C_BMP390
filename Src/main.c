@@ -25,9 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
-//#include "stdlib.h"
-//#include "string.h"
+#include "printf.h"
 #include "bmp3.h"
 /* USER CODE END Includes */
 
@@ -49,10 +47,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t startMsg[] = "Starting I2C Scanning: \r\n";
-uint8_t endMsg[] = "Done! \r\n\r\n";
-uint8_t buffer[128] = {0};
-uint8_t space[] = ".";
 
 /* USER CODE END PV */
 
@@ -69,10 +63,9 @@ static void delay_us(uint32_t period, void *intf_ptr);;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int _write(int fd, char *ch, int len)
+void _putchar(char character)
 {
-    HAL_UART_Transmit(&huart2, (uint8_t *)ch, len, HAL_MAX_DELAY);
-    return len;
+    HAL_UART_Transmit(&huart2, (uint8_t *)&character, 1, HAL_MAX_DELAY);
 }
 /* USER CODE END 0 */
 
@@ -118,22 +111,6 @@ int main(void)
   {
       Error_Handler();
   }
-//  HAL_UART_Transmit(&huart2, startMsg, sizeof(startMsg), 10000);
-//
-//  for(uint8_t i = 1; i < 128; i++)
-//  {
-//      uint8_t ret = HAL_I2C_IsDeviceReady(&hi2c1, (uint16_t)(i << 1), 3, 5);
-//      if( ret != HAL_OK )
-//      {
-//          HAL_UART_Transmit(&huart2, space, sizeof(space), 10000);
-//      }
-//      else
-//      {
-//          sprintf((char *)buffer, "0x%X", i);
-//          HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 10000);
-//      }
-//  }
-//  HAL_UART_Transmit(&huart2, endMsg, sizeof(endMsg), 10000);
 
   struct bmp3_dev the_sensor;
   struct bmp3_data data = { 0 };
@@ -213,15 +190,12 @@ int main(void)
             Error_Handler();
         }
 
-        printf("Data[%d]  T: %ld deg C, P: %lu Pa\r\n", loop, (long int)(int32_t)(data.temperature), (long unsigned int)(uint32_t)(data.pressure / 100));
-        //sprintf((char *)buffer,"Data[%d]  T: %.2f deg C, P: %.2f Pa\r\n", loop, data.temperature, data.pressure / 100.0f);
-        //HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 10000);
+        printf("Data[%d]  T: %.2f deg C, P: %.2f Pa\r\n", loop, data.temperature, data.pressure / 100.0f);
     }
 
     loop++;
     HAL_Delay(2000);
   }
-  //Error_Handler();
   /* USER CODE END 3 */
 }
 
