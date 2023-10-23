@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "i2c.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -68,7 +69,11 @@ static void delay_us(uint32_t period, void *intf_ptr);;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+int _write(int fd, char *ch, int len)
+{
+    HAL_UART_Transmit(&huart2, (uint8_t *)ch, len, HAL_MAX_DELAY);
+    return len;
+}
 /* USER CODE END 0 */
 
 /**
@@ -101,12 +106,18 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_Delay(1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  if(HAL_TIM_Base_Start(&htim2) != HAL_OK)
+  {
+      Error_Handler();
+  }
 //  HAL_UART_Transmit(&huart2, startMsg, sizeof(startMsg), 10000);
 //
 //  for(uint8_t i = 1; i < 128; i++)
@@ -202,9 +213,9 @@ int main(void)
             Error_Handler();
         }
 
-        sprintf((char *)buffer,"Data[%d]  T: %ld deg C, P: %lu Pa\r\n", loop, (long int)(int32_t)(data.temperature), (long unsigned int)(uint32_t)(data.pressure / 100));
+        printf("Data[%d]  T: %ld deg C, P: %lu Pa\r\n", loop, (long int)(int32_t)(data.temperature), (long unsigned int)(uint32_t)(data.pressure / 100));
         //sprintf((char *)buffer,"Data[%d]  T: %.2f deg C, P: %.2f Pa\r\n", loop, data.temperature, data.pressure / 100.0f);
-        HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 10000);
+        //HAL_UART_Transmit(&huart2, buffer, sizeof(buffer), 10000);
     }
 
     loop++;
@@ -263,8 +274,7 @@ void SystemClock_Config(void)
 int8_t i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
     I2C_HandleTypeDef *i2c = (I2C_HandleTypeDef *)intf_ptr;
-    HAL_I2C_Master_Transmit(i2c, BMP3_ADDR_I2C_SEC << 1, &reg_addr, 1, 100);
-    if(HAL_I2C_Master_Receive(i2c, BMP3_ADDR_I2C_SEC << 1, reg_data, len, 100))
+    if(HAL_I2C_Mem_Read(i2c, BMP3_ADDR_I2C_SEC << 1, reg_addr, 1, reg_data, len, 100))
     {
         return HAL_ERROR;
     }
@@ -280,14 +290,7 @@ int8_t i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_pt
 int8_t i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
     I2C_HandleTypeDef *i2c = (I2C_HandleTypeDef *)intf_ptr;
-    uint8_t xfer[len + 1];
-
-    xfer[0] = reg_addr;
-    for(uint8_t i = 0; i < len; i++)
-    {
-        xfer[i + 1] = reg_data[i];
-    }
-    if(HAL_I2C_Master_Transmit(i2c, BMP3_ADDR_I2C_SEC << 1, xfer, len + 1, 100))
+    if(HAL_I2C_Mem_Write(i2c, BMP3_ADDR_I2C_SEC << 1, reg_addr, 1, (uint8_t *)reg_data, len, 100))
     {
         return HAL_ERROR;
     }
@@ -297,9 +300,10 @@ int8_t i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *
 
 void delay_us(uint32_t period, void *intf_ptr)
 {
-    uint32_t ms = period / 1000;
-    if(ms == 0) ms = 1;
-    HAL_Delay(ms);
+    uint32_t end = TIM2->CNT + 16*period; // 16 - based on 16MHz HCLK
+    while(TIM2->CNT < end)
+    {
+    }
 }
 /* USER CODE END 4 */
 
@@ -334,4 +338,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
