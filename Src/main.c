@@ -248,7 +248,7 @@ void SystemClock_Config(void)
 int8_t i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
     I2C_HandleTypeDef *i2c = (I2C_HandleTypeDef *)intf_ptr;
-    if(HAL_I2C_Mem_Read(i2c, BMP3_ADDR_I2C_SEC << 1, reg_addr, 1, reg_data, len, 100))
+    if(HAL_I2C_Mem_Read(i2c, BMP3_ADDR_I2C_SEC << 1, reg_addr, 1, reg_data, len, HAL_MAX_DELAY))
     {
         return HAL_ERROR;
     }
@@ -264,7 +264,7 @@ int8_t i2c_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_pt
 int8_t i2c_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
     I2C_HandleTypeDef *i2c = (I2C_HandleTypeDef *)intf_ptr;
-    if(HAL_I2C_Mem_Write(i2c, BMP3_ADDR_I2C_SEC << 1, reg_addr, 1, (uint8_t *)reg_data, len, 100))
+    if(HAL_I2C_Mem_Write(i2c, BMP3_ADDR_I2C_SEC << 1, reg_addr, 1, (uint8_t *)reg_data, len, HAL_MAX_DELAY))
     {
         return HAL_ERROR;
     }
